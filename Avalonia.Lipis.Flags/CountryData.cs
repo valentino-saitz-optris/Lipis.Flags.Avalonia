@@ -277,7 +277,7 @@ public class CountryData
     /// <param name="iso2">The ISO 3166-1 alpha-2 country code to look up.</param>
     /// <param name="name">The country name.</param>
     /// <returns><c>true</c> if the name was found, otherwise <c>false</c>.</returns>
-    public static bool TryGetName(string iso2, out string name) => _englishNameByIso2.TryGetValue(iso2, out name);
+    public static bool TryGetName(string iso2, out string? name) => _englishNameByIso2.TryGetValue(iso2, out name);
 
     /// <summary>
     /// The country's identifier, according to ISO 3166-1 alpha-2.
