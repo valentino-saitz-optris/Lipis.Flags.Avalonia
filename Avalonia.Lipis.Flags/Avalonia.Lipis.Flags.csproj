@@ -10,6 +10,10 @@
         <PackageIcon>globe.png</PackageIcon>
         <Version>11.3.2</Version>
         <Title>Avalonia.Lipis.Flags</Title>
+        <PackageProjectUrl>https://github.com/ALDamico/Avalonia.Lipis.Flags</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/ALDamico/Avalonia.Lipis.Flags/blob/master/LICENSE</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/ALDamico/Avalonia.Lipis.Flags</RepositoryUrl>
+        <RepositoryType>github</RepositoryType>
     </PropertyGroup>
 
     <ItemGroup>

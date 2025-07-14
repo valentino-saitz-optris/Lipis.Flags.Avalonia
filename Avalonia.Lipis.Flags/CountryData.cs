@@ -1,4 +1,4 @@
-﻿namespace TombLauncher.Controls.LipisFlags;
+﻿namespace Avalonia.Lipis.Flags;
 
 public class CountryData
 {
