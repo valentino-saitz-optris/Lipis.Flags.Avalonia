@@ -1,19 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>Andrea Luciano Damico</Authors>
         <Description>Provides an Avalonia value converter that converts an ISO 3166-1 alpha-2 country code into an Avalonia Svg of that country's flag.</Description>
-        <PackageIcon>globe.png</PackageIcon>
         <Version>11.3.2</Version>
         <Title>Lipis.Flags.Avalonia</Title>
         <PackageProjectUrl>https://github.com/ALDamico/Lipis.Flags.Avalonia</PackageProjectUrl>
-        <PackageLicenseUrl>https://github.com/ALDamico/Lipis.Flags.Avalonia/blob/master/LICENSE</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/ALDamico/Lipis.Flags.Avalonia</RepositoryUrl>
         <RepositoryType>github</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
@@ -25,12 +25,8 @@
         <AvaloniaResource Include="Assets\1x1\**"/>
         <AvaloniaResource Include="Assets\4x3\**"/>
     </ItemGroup>
-
     <ItemGroup>
-      <None Update="Assets\globe.png">
-        <Pack>True</Pack>
-        <PackagePath>globe.png</PackagePath>
-      </None>
+        <Content Include="../README.md"><Pack>True</Pack><PackagePath>\</PackagePath></Content>
     </ItemGroup>
 
 </Project>

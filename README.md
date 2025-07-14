@@ -1,14 +1,14 @@
-# Avalonia.Lipis.Flags
+# Lipis.Flags.Avalonia
 A simple library for showing flags in Avalonia.
 
-Avalonia.Lipis.Flags provides an Avalonia IValueConverter that can be used to convert an ISO 3166-1 alpha-2 country code into an SVG that can be used in Avalonia applications.
+Lipis.Flags.Avalonia provides an Avalonia IValueConverter that can be used to convert an ISO 3166-1 alpha-2 country code into an SVG that can be used in Avalonia applications.
 
 It is based on FamFamFam.Flags.Wpf, from which it lifts part of its internal workings.
 
 ## Installation
-Source from [NuGet](https://www.nuget.org/packages/Avalonia.Lipis.Flags/):
+Source from [NuGet](https://www.nuget.org/packages/Lipis.Flags.Avalonia/):
 
-> Install-Package Avalonia.Lipis.Flags
+> Install-Package Lipis.Flags.Avalonia
 
 ## Usage
 The following code creates an image of flag that corresonds to the [two letter ISO 3166-1 alpha-2 country
@@ -44,7 +44,7 @@ You could show a `ComboBox` of country flags and names using the following code:
 </ComboBox>
 ```
 
-Avalonia.Lipis.Flags supports both 4:3 (the default) and 1:1 aspect ratios. This is controlled by passing a `FlagAspectRatio` value as a converter parameter, like this:
+Lipis.Flags.Avalonia supports both 4:3 (the default) and 1:1 aspect ratios. This is controlled by passing a `FlagAspectRatio` value as a converter parameter, like this:
 
 ```xaml
 <Svg Source="{Binding Converter={StaticResource CountryIdToFlagImageSourceConverter}, ConverterParameter={x:Static flags:FlagAspectRatio.OneByOne}}" />
