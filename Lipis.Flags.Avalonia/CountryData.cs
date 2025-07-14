@@ -1,4 +1,4 @@
-﻿namespace Avalonia.Lipis.Flags;
+﻿namespace Lipis.Flags.Avalonia;
 
 public class CountryData
 {

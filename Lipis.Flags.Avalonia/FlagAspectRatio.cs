@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace Avalonia.Lipis.Flags;
+namespace Lipis.Flags.Avalonia;
 
 public enum FlagAspectRatio
 {

@@ -2,7 +2,7 @@
 using Avalonia.Data.Converters;
 using EnumsNET;
 
-namespace Avalonia.Lipis.Flags;
+namespace Lipis.Flags.Avalonia;
 
 public sealed class CountryIdToFlagImageSourceConverter : IValueConverter
 {
@@ -16,7 +16,7 @@ public sealed class CountryIdToFlagImageSourceConverter : IValueConverter
         var aspectRatioFolder = GetAspectRatioFolder(parameter);
         try
         {
-            var path = $"avares://Avalonia.Lipis.Flags/Assets/{aspectRatioFolder}/{countryId.ToLower()}.svg";
+            var path = $"avares://Lipis.Flags.Avalonia/Assets/{aspectRatioFolder}/{countryId.ToLower()}.svg";
             return new Uri(path, UriKind.Absolute);
         }
         catch

@@ -9,10 +9,10 @@
         <Description>Provides an Avalonia value converter that converts an ISO 3166-1 alpha-2 country code into an Avalonia Svg of that country's flag.</Description>
         <PackageIcon>globe.png</PackageIcon>
         <Version>11.3.2</Version>
-        <Title>Avalonia.Lipis.Flags</Title>
-        <PackageProjectUrl>https://github.com/ALDamico/Avalonia.Lipis.Flags</PackageProjectUrl>
-        <PackageLicenseUrl>https://github.com/ALDamico/Avalonia.Lipis.Flags/blob/master/LICENSE</PackageLicenseUrl>
-        <RepositoryUrl>https://github.com/ALDamico/Avalonia.Lipis.Flags</RepositoryUrl>
+        <Title>Lipis.Flags.Avalonia</Title>
+        <PackageProjectUrl>https://github.com/ALDamico/Lipis.Flags.Avalonia</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/ALDamico/Lipis.Flags.Avalonia/blob/master/LICENSE</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/ALDamico/Lipis.Flags.Avalonia</RepositoryUrl>
         <RepositoryType>github</RepositoryType>
     </PropertyGroup>
 
