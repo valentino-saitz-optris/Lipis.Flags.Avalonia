@@ -6,8 +6,10 @@
         <Nullable>enable</Nullable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>Andrea Luciano Damico</Authors>
-        <Description>An IValueConverter to convert from two-letter country codes to Lipis flag icons in SVG format.</Description>
+        <Description>Provides an Avalonia value converter that converts an ISO 3166-1 alpha-2 country code into an Avalonia Svg of that country's flag.</Description>
         <PackageIcon>globe.png</PackageIcon>
+        <Version>11.3.2</Version>
+        <Title>Avalonia.Lipis.Flags</Title>
     </PropertyGroup>
 
     <ItemGroup>

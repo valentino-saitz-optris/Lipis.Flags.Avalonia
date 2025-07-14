@@ -1,7 +1,5 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{969E418A-16A4-4188-9FDE-89005AF55311}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avalonia.Lipis.Flags", "Avalonia.Lipis.Flags\Avalonia.Lipis.Flags.csproj", "{A39F8EB8-0166-4031-8464-F9FE0958B54E}"
 EndProject
 Global
@@ -10,7 +8,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{A39F8EB8-0166-4031-8464-F9FE0958B54E} = {969E418A-16A4-4188-9FDE-89005AF55311}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{A39F8EB8-0166-4031-8464-F9FE0958B54E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
