@@ -1,7 +1,6 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Platform;
-using EnumsNET;
 
 namespace Lipis.Flags.Avalonia;
 
@@ -36,17 +35,12 @@ public sealed class CountryIdToFlagImageSourceConverter : IValueConverter
         throw new NotSupportedException();
     }
 
-    private string GetAspectRatioFolder(object? parameter)
+    /// <summary>
+    /// Gets the folder name corresponding to the aspect ratio. (e.g., "4x3" or "1x1")
+    /// </summary>
+    private static string GetAspectRatioFolder(object? parameter) => parameter switch
     {
-        var aspectRatio = FlagAspectRatio.FourByThree;
-        if (parameter is FlagAspectRatio ratio)
-        {
-            aspectRatio = ratio;
-        }
-
-        var str = aspectRatio.AsString(EnumFormat.Description);
-        if (str == null)
-            str = "4x3";
-        return str;
-    }
+        FlagAspectRatio.OneByOne => "1x1",
+        _ => "4x3",
+    };
 }

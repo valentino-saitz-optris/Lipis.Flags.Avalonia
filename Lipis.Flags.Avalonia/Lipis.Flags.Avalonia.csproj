@@ -6,19 +6,26 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>Andrea Luciano Damico</Authors>
         <Description>Provides an Avalonia value converter that converts an ISO 3166-1 alpha-2 country code into an Avalonia Svg of that country's flag.</Description>
-        <Version>11.3.2</Version>
+        <Version>12.0.0</Version>
         <Title>Lipis.Flags.Avalonia</Title>
         <PackageProjectUrl>https://github.com/ALDamico/Lipis.Flags.Avalonia</PackageProjectUrl>
         <RepositoryUrl>https://github.com/ALDamico/Lipis.Flags.Avalonia</RepositoryUrl>
         <RepositoryType>github</RepositoryType>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+        <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    </PropertyGroup>
+
+    <!--
+        IsAotCompatible implies IsTrimmable plus the trim, AOT and single-file analyzers, so a
+        pattern the trimmer cannot see through fails this build rather than a consumer's publish.
+    -->
+    <PropertyGroup>
+        <IsAotCompatible>true</IsAotCompatible>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.3.2"/>
-        <PackageReference Include="Enums.NET" Version="5.0.0"/>
+        <PackageReference Include="Avalonia" Version="12.0.1"/>
     </ItemGroup>
 
     <ItemGroup>
