@@ -17,7 +17,7 @@ public sealed class CountryIdToFlagImageSourceConverter : IValueConverter
     /// Reads the aspect ratio from a converter parameter, accepting the enum or the strings
     /// "4x3", "1x1", "FourByThree" and "OneByOne".
     /// </summary>
-    private static FlagAspectRatio ParseAspectRatio(object? parameter) => parameter switch
+    internal static FlagAspectRatio ParseAspectRatio(object? parameter) => parameter switch
     {
         FlagAspectRatio aspectRatio => aspectRatio,
         string text when text.Equals("1x1", StringComparison.OrdinalIgnoreCase)
