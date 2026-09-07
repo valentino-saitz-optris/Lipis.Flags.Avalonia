@@ -16,7 +16,7 @@ public sealed class CountryIdToFlagImageSourceConverter : IValueConverter
         var aspectRatioFolder = GetAspectRatioFolder(parameter);
         try
         {
-            var path = $"avares://Lipis.Flags.Avalonia/Assets/{aspectRatioFolder}/{countryId.ToLower()}.svg";
+            var path = $"avares://Lipis.Flags.Avalonia/Assets/{aspectRatioFolder}/{countryId.ToLowerInvariant()}.svg";
             return new Uri(path, UriKind.Absolute);
         }
         catch
