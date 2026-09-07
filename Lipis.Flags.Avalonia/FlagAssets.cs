@@ -1,5 +1,4 @@
-using System.Collections.Concurrent;
-using Avalonia.Platform;
+﻿using System.Collections.Concurrent;
 using Avalonia.Svg;
 
 namespace Lipis.Flags.Avalonia;
@@ -66,6 +65,6 @@ public static class FlagAssets
 
         var code = countryId.Trim().ToLowerInvariant();
 
-        return AssetLoader.Exists(new Uri(PathFor(code, FlagAspectRatio.FourByThree), UriKind.Absolute)) ? code : null;
+        return CountryData.HasFlag(code) ? code : null;
     }
 }

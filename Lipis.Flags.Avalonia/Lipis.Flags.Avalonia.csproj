@@ -33,6 +33,29 @@
         <PackageReference Include="Svg.Controls.Avalonia" Version="12.0.0.17"/>
     </ItemGroup>
 
+    <!--
+        The country table is generated from country.json so the names and the artwork always come
+        from the same upstream release. It is build output, not source: country.json is the file
+        worth reviewing. Inputs and Outputs make this a no-op on an up-to-date build; both target
+        frameworks share the output path, so this runs in the outer build before they are
+        dispatched: two inner builds invoking the generator at once collide over its own obj.
+    -->
+    <PropertyGroup>
+        <_CountryTable>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(BaseIntermediateOutputPath)', 'generated', 'CountryData.g.cs'))</_CountryTable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="$(_CountryTable)"/>
+    </ItemGroup>
+
+    <Target Name="GenerateCountryTable"
+            BeforeTargets="DispatchToInnerBuilds;BeforeCompile"
+            Inputs="$(MSBuildProjectDirectory)/../country.json;$(MSBuildProjectDirectory)/../tools/FlagGenerator/Program.cs"
+            Outputs="$(_CountryTable)">
+        <Exec Command="dotnet run --project &quot;$(MSBuildProjectDirectory)/../tools/FlagGenerator/FlagGenerator.csproj&quot; -c Release -- &quot;$(MSBuildProjectDirectory)/..&quot; &quot;$(_CountryTable)&quot;"
+              WorkingDirectory="$(MSBuildProjectDirectory)/.."/>
+    </Target>
+
     <ItemGroup>
         <AvaloniaResource Include="Assets\1x1\**"/>
         <AvaloniaResource Include="Assets\4x3\**"/>
