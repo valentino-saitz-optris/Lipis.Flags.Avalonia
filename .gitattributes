@@ -1,0 +1,11 @@
+# Normalise line endings for everything text-like; the vendored assets opt out below.
+* text=auto
+
+# The flag SVGs are vendored verbatim from lipis/flag-icons and are refreshed by an
+# automated sync job running on Linux. Disabling eol conversion keeps the worktree
+# byte-identical to the index on every platform, so a sync PR only ever contains the
+# flags that genuinely changed upstream rather than all 542 files renormalised.
+*.svg -text
+
+# country.json is vendored from the same source and drives the generated country table.
+country.json -text

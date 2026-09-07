@@ -56,10 +56,49 @@
               WorkingDirectory="$(MSBuildProjectDirectory)/.."/>
     </Target>
 
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\1x1\**"/>
-        <AvaloniaResource Include="Assets\4x3\**"/>
-    </ItemGroup>
+    <!--
+        One embedded archive rather than ~540 resources: 3.87 MB of assembly becomes 1.36 MB.
+        Staged under a fixed timestamp first, because a zip entry records its file's last-write time
+        and a checkout rewrites those. EmbeddedResource sits inside the target because an item group
+        at project scope is evaluated before the file it names exists.
+    -->
+    <Target Name="PackFlagAssets" BeforeTargets="PrepareForBuild">
+        <ItemGroup>
+            <_FlagAsset Include="Assets\**\*.svg"/>
+            <_StagedFlag Include="@(_FlagAsset->'$(IntermediateOutputPath)flags\%(RecursiveDir)%(Filename)%(Extension)')"/>
+        </ItemGroup>
+        <RemoveDir Directories="$(IntermediateOutputPath)flags"/>
+        <Copy SourceFiles="@(_FlagAsset)" DestinationFiles="@(_StagedFlag)"/>
+        <Touch Files="@(_StagedFlag)" Time="1980-01-01T00:00:00"/>
+        <ZipDirectory SourceDirectory="$(IntermediateOutputPath)flags"
+                      DestinationFile="$(IntermediateOutputPath)flags.zip"
+                      Overwrite="true"/>
+        <ItemGroup>
+            <EmbeddedResource Include="$(IntermediateOutputPath)flags.zip" LogicalName="flags.zip"/>
+        </ItemGroup>
+    </Target>
+
+    <!--
+        An empty asset directory zips and packs without complaint, so assert a count rather than
+        presence. A floor, so an upstream add or retirement needs no manual bump, plus an equality
+        check the floor alone would miss. GenerateNuspec too: a pack can skip the build.
+    -->
+    <Target Name="VerifyFlagAssets" BeforeTargets="PrepareForBuild;GenerateNuspec">
+        <PropertyGroup>
+            <_MinimumFlagCount>250</_MinimumFlagCount>
+        </PropertyGroup>
+        <ItemGroup>
+            <_FourByThreeFlags Include="Assets\4x3\*.svg"/>
+            <_OneByOneFlags Include="Assets\1x1\*.svg"/>
+        </ItemGroup>
+        <Error Condition="'@(_FourByThreeFlags->Count())' &lt; '$(_MinimumFlagCount)'"
+               Text="Found only @(_FourByThreeFlags->Count()) flags in Assets\4x3, below the floor of $(_MinimumFlagCount). The vendored flag assets are missing or incomplete."/>
+        <Error Condition="'@(_OneByOneFlags->Count())' &lt; '$(_MinimumFlagCount)'"
+               Text="Found only @(_OneByOneFlags->Count()) flags in Assets\1x1, below the floor of $(_MinimumFlagCount). The vendored flag assets are missing or incomplete."/>
+        <Error Condition="'@(_FourByThreeFlags->Count())' != '@(_OneByOneFlags->Count())'"
+               Text="Assets\4x3 has @(_FourByThreeFlags->Count()) flags but Assets\1x1 has @(_OneByOneFlags->Count()). The two aspect-ratio sets must match."/>
+    </Target>
+
     <ItemGroup>
         <Content Include="../README.md"><Pack>True</Pack><PackagePath>\</PackagePath></Content>
     </ItemGroup>
