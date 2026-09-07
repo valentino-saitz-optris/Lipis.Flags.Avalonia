@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <IsPackable>false</IsPackable>
+        <AvaloniaNameGeneratorIsEnabled>false</AvaloniaNameGeneratorIsEnabled>
+        <!--
+            Compiled bindings everywhere. A mistyped property or a binding whose type cannot
+            reach the target then fails the build instead of silently rendering nothing, which
+            is the usual way an SVG flag "does not work".
+        -->
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    </PropertyGroup>
+
+    <!--
+        No Svg.Controls.Avalonia reference: the converters return an SvgImage, which is an IImage,
+        so every flag here is drawn by Avalonia's own Image control. The package arrives
+        transitively because SvgImage is part of the library's public signature; naming it again
+        would only let the two versions drift.
+
+        Avalonia.Controls.ItemsRepeater is not transitive: the gallery grid virtualises 271 tiles.
+    -->
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="12.1.2"/>
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.2"/>
+        <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="12.0.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Lipis.Flags.Avalonia\Lipis.Flags.Avalonia.csproj"/>
+    </ItemGroup>
+
+</Project>

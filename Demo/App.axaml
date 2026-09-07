@@ -1,0 +1,103 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Demo.App"
+             RequestedThemeVariant="Default">
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <!--
+                The sample defines its own semantic palette per theme variant rather than reaching
+                for FluentTheme's internal resource keys. A DynamicResource that resolves to
+                nothing fails silently, and the Fluent key set is not identical across Avalonia
+                majors, so an owned palette is the only way "works in light and dark" stays true.
+            -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="DemoPageBackground" Color="#F4F5F7"/>
+                    <SolidColorBrush x:Key="DemoCardBackground" Color="#FFFFFF"/>
+                    <SolidColorBrush x:Key="DemoCardBorder" Color="#E2E4E9"/>
+                    <SolidColorBrush x:Key="DemoMutedForeground" Color="#61666F"/>
+                    <SolidColorBrush x:Key="DemoCodeBackground" Color="#F0F1F4"/>
+                    <SolidColorBrush x:Key="DemoCodeForeground" Color="#24292F"/>
+                    <SolidColorBrush x:Key="DemoNoticeBackground" Color="#FFF6E8"/>
+                    <SolidColorBrush x:Key="DemoNoticeBorder" Color="#EAD3AC"/>
+                    <SolidColorBrush x:Key="DemoNoticeForeground" Color="#8A5300"/>
+                    <SolidColorBrush x:Key="DemoPositiveForeground" Color="#1A7F45"/>
+                    <SolidColorBrush x:Key="DemoTileHover" Color="#12000000"/>
+                    <SolidColorBrush x:Key="DemoFlagSlotBackground" Color="#FAFAFB"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="DemoPageBackground" Color="#1B1D21"/>
+                    <SolidColorBrush x:Key="DemoCardBackground" Color="#25282E"/>
+                    <SolidColorBrush x:Key="DemoCardBorder" Color="#373B43"/>
+                    <SolidColorBrush x:Key="DemoMutedForeground" Color="#9BA1AC"/>
+                    <SolidColorBrush x:Key="DemoCodeBackground" Color="#15171A"/>
+                    <SolidColorBrush x:Key="DemoCodeForeground" Color="#DEE2E8"/>
+                    <SolidColorBrush x:Key="DemoNoticeBackground" Color="#33291A"/>
+                    <SolidColorBrush x:Key="DemoNoticeBorder" Color="#5A472A"/>
+                    <SolidColorBrush x:Key="DemoNoticeForeground" Color="#EFC377"/>
+                    <SolidColorBrush x:Key="DemoPositiveForeground" Color="#72D394"/>
+                    <SolidColorBrush x:Key="DemoTileHover" Color="#18FFFFFF"/>
+                    <SolidColorBrush x:Key="DemoFlagSlotBackground" Color="#1F2126"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme/>
+
+        <Style Selector=":is(TextBlock).h1">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style Selector=":is(TextBlock).h2">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style Selector=":is(TextBlock).muted">
+            <Setter Property="Foreground" Value="{DynamicResource DemoMutedForeground}"/>
+        </Style>
+
+        <Style Selector=":is(TextBlock).caption">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource DemoMutedForeground}"/>
+        </Style>
+
+        <Style Selector=":is(TextBlock).mono">
+            <Setter Property="FontFamily" Value="Cascadia Mono,Consolas,DejaVu Sans Mono,Menlo,Courier New"/>
+        </Style>
+
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{DynamicResource DemoCardBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoCardBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="16"/>
+        </Style>
+
+        <Style Selector="Border.notice">
+            <Setter Property="Background" Value="{DynamicResource DemoNoticeBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoNoticeBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12"/>
+        </Style>
+
+        <!--
+            A fixed-size slot behind every flag. FlagAssets.GetImage returns null for a code it
+            does not recognise, and an Image with no Source measures to zero, so without a sized
+            slot an unresolved flag would silently reflow the row around it.
+        -->
+        <Style Selector="Border.flagSlot">
+            <Setter Property="Background" Value="{DynamicResource DemoFlagSlotBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DemoCardBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+        </Style>
+    </Application.Styles>
+
+</Application>

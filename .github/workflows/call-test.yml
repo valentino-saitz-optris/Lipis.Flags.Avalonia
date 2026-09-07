@@ -1,0 +1,207 @@
+name: Test
+
+# Reusable workflow: the single definition of "is this commit good?".
+# Called by push.yml on every push and pull request, and by release.yml before it packs,
+# so a tag can never ship a build that has not passed the same gates as a pull request.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Restore
+        run: |
+          dotnet restore Lipis.Flags.Avalonia/Lipis.Flags.Avalonia.csproj
+          dotnet restore Lipis.Flags.Avalonia.Test/Lipis.Flags.Avalonia.Test.csproj
+
+      - name: Build
+        run: >
+          dotnet build Lipis.Flags.Avalonia/Lipis.Flags.Avalonia.csproj
+          --configuration Release
+          --no-restore
+
+      - name: Test
+        run: >
+          dotnet test Lipis.Flags.Avalonia.Test/Lipis.Flags.Avalonia.Test.csproj
+          --configuration Release
+          --no-restore
+
+  aot:
+    name: AOT compatibility
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      # Native AOT links the produced object file with clang against zlib on Linux.
+      - name: Install Native AOT prerequisites
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      # IsAotCompatible in the library makes the analyzers run during its own build, but a
+      # library's trim/AOT warnings only fully surface when a consuming app is AOT-published:
+      # that is when the whole call graph is closed and the trimmer can see what it cannot keep.
+      # The desktop head of the sample app roots the library the way a real consumer does, so
+      # this is the authoritative gate.
+      - name: AOT publish the sample app (fail on any IL trim/AOT warning)
+        run: |
+          set -o pipefail
+          dotnet publish Demo.Desktop/Demo.Desktop.csproj \
+            -c Release -r linux-x64 -p:PublishAot=true 2>&1 | tee aot-publish.log
+          if grep -nE "warning IL[0-9]{4}" aot-publish.log; then
+            echo "::error::Native AOT/trim warnings detected. The library is no longer AOT-clean; see the IL#### lines above."
+            exit 1
+          fi
+          echo "No IL2xxx/IL3xxx trim/AOT warnings. The library is AOT-clean."
+
+  aot-assets:
+    name: AOT asset resolution
+    runs-on: ubuntu-latest
+
+    # The sibling `aot` job catches everything the trimmer *reports*. This job exists for the
+    # failure it does not report: artwork that is present at compile time and absent at runtime.
+    #
+    # The flags travel as a single compressed archive embedded as the `flags.zip` manifest
+    # resource. Nothing reports it if that resource fails to survive a publish: the build stays
+    # green, the IL warning count stays at zero, and the first flag lookup returns nothing.
+    #
+    # So the probe does not inspect metadata; it asks the library for real flags and checks the
+    # bytes that come back. Everything between the manifest resource and the SVG markup is
+    # covered: the resource survived, the archive still opens, the entry names still line up with
+    # the generated country table, and the deflate stream still decompresses.
+    #
+    # InvariantGlobalization is on deliberately. It is the usual setting for a Native AOT app, it
+    # is the mode in which the Turkish lower-casing bug cannot reproduce, and running the probe
+    # under it proves the lookup path does not quietly depend on ICU being present.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Install Native AOT prerequisites
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      # Written to the runner's temp directory rather than committed: it is a CI probe, not part
+      # of the product, and keeping it here means the check and its explanation stay in one file.
+      - name: Generate the asset-resolution probe
+        run: |
+          PROBE="$RUNNER_TEMP/aot-asset-probe"
+          mkdir -p "$PROBE"
+
+          # Unquoted heredoc so $GITHUB_WORKSPACE expands into an absolute ProjectReference.
+          cat > "$PROBE/AotAssetProbe.csproj" <<EOF
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <OutputType>Exe</OutputType>
+              <TargetFramework>net10.0</TargetFramework>
+              <Nullable>enable</Nullable>
+              <PublishAot>true</PublishAot>
+              <InvariantGlobalization>true</InvariantGlobalization>
+            </PropertyGroup>
+            <ItemGroup>
+              <ProjectReference Include="$GITHUB_WORKSPACE/Lipis.Flags.Avalonia/Lipis.Flags.Avalonia.csproj" />
+            </ItemGroup>
+          </Project>
+          EOF
+
+          # Quoted heredoc: this one must reach disk verbatim.
+          cat > "$PROBE/Program.cs" <<'EOF'
+          using System;
+          using System.IO;
+          using System.Linq;
+          using Lipis.Flags.Avalonia;
+
+          // A spread rather than a single flag: one from each aspect ratio, one non-ISO entity,
+          // and the largest entry in the archive, whose deflate stream spans several buffers.
+          (string Code, FlagAspectRatio AspectRatio)[] probes =
+          [
+              ("de", FlagAspectRatio.FourByThree),
+              ("jp", FlagAspectRatio.OneByOne),
+              ("eu", FlagAspectRatio.FourByThree),
+              ("rs", FlagAspectRatio.FourByThree),
+          ];
+
+          foreach (var (code, aspectRatio) in probes)
+          {
+              using var stream = FlagAssets.OpenSvgStream(code, aspectRatio);
+
+              if (stream is null)
+              {
+                  Console.Error.WriteLine(
+                      "FAIL: " + code + " (" + aspectRatio + ") resolved to nothing. The embedded archive did not " +
+                      "survive the Native AOT publish, or its entries no longer match the country table.");
+                  return 1;
+              }
+
+              using var reader = new StreamReader(stream);
+              var markup = reader.ReadToEnd();
+
+              if (!markup.Contains("<svg", StringComparison.Ordinal))
+              {
+                  Console.Error.WriteLine(
+                      "FAIL: " + code + " (" + aspectRatio + ") produced " + markup.Length +
+                      " characters that are not SVG. The archive is present but its contents are wrong.");
+                  return 1;
+              }
+
+              Console.WriteLine("OK: " + code + " (" + aspectRatio + ") -> " + markup.Length + " characters of SVG.");
+          }
+
+          // The membership check must still reject unknown codes. If this regressed, a typo in a
+          // binding would reach the archive lookup and surface as an exception rather than a blank.
+          if (FlagAssets.OpenSvgStream("zz") is not null)
+          {
+              Console.Error.WriteLine("FAIL: the unknown code \"zz\" resolved to artwork.");
+              return 1;
+          }
+
+          // The generated country table has to survive too; it is what gates every lookup above.
+          var codes = CountryData.AllFlagCodes.Count();
+
+          if (codes < 250)
+          {
+              Console.Error.WriteLine("FAIL: the country table holds only " + codes + " codes.");
+              return 1;
+          }
+
+          Console.WriteLine("OK: " + codes + " flag codes survived the Native AOT publish.");
+          return 0;
+          EOF
+
+      - name: Publish and run the probe (fail if the flags vanish under AOT)
+        run: |
+          PROBE="$RUNNER_TEMP/aot-asset-probe"
+          dotnet publish "$PROBE/AotAssetProbe.csproj" -c Release -r linux-x64 -p:PublishAot=true -o "$PROBE/publish"
+          if ! "$PROBE/publish/AotAssetProbe"; then
+            echo "::error::The embedded flag assets do not survive a Native AOT publish. See the probe output above."
+            exit 1
+          fi

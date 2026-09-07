@@ -1,0 +1,177 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Demo.ViewModels"
+             x:Class="Demo.Views.CultureView"
+             x:DataType="vm:CultureViewModel">
+
+    <UserControl.Resources>
+        <!--
+            One row template for all four lists on this page, so the spotlight row above and the
+            grouped rows below cannot drift apart visually.
+        -->
+        <DataTemplate x:Key="CultureRowTemplate" x:DataType="vm:CultureRow">
+            <Grid ColumnDefinitions="80,104,*,96,208" Margin="0,5">
+
+                <Border Classes="flagSlot" Width="64" Height="48" HorizontalAlignment="Left">
+                    <Panel>
+                        <!--
+                            The empty state. A culture with no country resolves to null, and an
+                            Image with no Source measures to nothing, so the slot and this outline
+                            are what keep the row from silently collapsing.
+                        -->
+                        <Rectangle Margin="6"
+                                   RadiusX="2"
+                                   RadiusY="2"
+                                   StrokeThickness="1"
+                                   StrokeDashArray="3,3"
+                                   Stroke="{DynamicResource DemoMutedForeground}"
+                                   IsVisible="{Binding Flag, Converter={x:Static ObjectConverters.IsNull}}"/>
+                        <Image Source="{Binding Flag}" Stretch="Uniform"/>
+                    </Panel>
+                </Border>
+
+                <TextBlock Grid.Column="1" Classes="mono" FontSize="12.5"
+                           VerticalAlignment="Center" Text="{Binding CultureName}"/>
+
+                <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center" Margin="0,0,14,0">
+                    <TextBlock FontSize="13" TextTrimming="CharacterEllipsis" Text="{Binding EnglishName}"/>
+                    <TextBlock Classes="caption" FontSize="11" TextWrapping="Wrap" Text="{Binding Resolution}"/>
+                </StackPanel>
+
+                <TextBlock Grid.Column="3" Classes="mono" FontSize="12.5" FontWeight="SemiBold"
+                           VerticalAlignment="Center" Text="{Binding LibraryLabel}"/>
+
+                <Panel Grid.Column="4">
+                    <TextBlock Classes="mono caption" FontSize="11.5" TextWrapping="Wrap"
+                               VerticalAlignment="Center"
+                               IsVisible="{Binding !NaiveDiffers}"
+                               Text="{Binding NaiveLabel}"/>
+                    <TextBlock Classes="mono" FontSize="11.5" TextWrapping="Wrap"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource DemoNoticeForeground}"
+                               IsVisible="{Binding NaiveDiffers}"
+                               Text="{Binding NaiveLabel}"/>
+                </Panel>
+
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Grid.columnHeader > TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource DemoMutedForeground}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <StackPanel Margin="12" Spacing="12">
+
+            <Border Classes="card">
+                <StackPanel Spacing="8">
+                    <TextBlock Classes="h2" Text="Mapping a culture to a flag"/>
+                    <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap"
+                               Text="A language is not a country, so this is not a lookup. The obvious implementation, new RegionInfo(culture.Name), accepts a bare language subtag and reinterprets it as a country code: new RegionInfo(&quot;af&quot;) yields Afghanistan, while this library yields za, South Africa, because af is Afrikaans. The same goes for ar, sv, cs, ca, sr and sl. It happens to be right for de only because DE is both the language and the country code, which is exactly why the bug survives a quick check on a German machine."/>
+                    <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap"
+                               Text="Both answers are computed live below, on this machine, from the same culture. Rows are grouped by what actually came back, not by a hand-written list."/>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel Spacing="14">
+                    <TextBlock Classes="h2" Text="Options"/>
+
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <TextBlock Text="Neutral cultures" VerticalAlignment="Center"/>
+                            <ToggleSwitch MinWidth="0"
+                                          OffContent="LikelySubtags"
+                                          OnContent="OverridesOnly"
+                                          IsChecked="{Binding UseOverridesOnly}"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Classes="caption" TextWrapping="Wrap"
+                                   VerticalAlignment="Center" Margin="16,0,0,0"
+                                   Text="{Binding PolicyDescription}"/>
+
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10"
+                                    VerticalAlignment="Center" Margin="0,10,0,0">
+                            <TextBlock Text="Override" VerticalAlignment="Center"/>
+                            <ToggleSwitch MinWidth="0"
+                                          OffContent="off"
+                                          OnContent="on"
+                                          IsChecked="{Binding ApplyOverride}"/>
+                        </StackPanel>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Classes="mono caption" TextWrapping="Wrap"
+                                   VerticalAlignment="Center" Margin="16,10,0,0"
+                                   Text="{Binding OverrideDescription}"/>
+                    </Grid>
+
+                    <Border Classes="notice">
+                        <StackPanel Spacing="10">
+                            <TextBlock FontSize="12.5" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource DemoNoticeForeground}"
+                                       Text="This runtime expands zh-Hant to Hong Kong; CLDR says Taiwan, and the library follows CLDR, so tw is the flag below. An application that wants Hong Kong says so with an override: turn it on and the flag changes, because overrides are checked before anything else. Switch the policy to OverridesOnly with the override off and zh-Hant resolves to nothing at all."/>
+                            <ContentControl Content="{Binding OverrideRow}"
+                                            ContentTemplate="{StaticResource CultureRowTemplate}"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel Spacing="6">
+                    <TextBlock Classes="h2" Text="Where the naive mapping goes wrong"/>
+                    <TextBlock Classes="caption" TextWrapping="Wrap" Text="{Binding MismatchSummary}"/>
+
+                    <Grid Classes="columnHeader" ColumnDefinitions="80,104,*,96,208" Margin="0,10,0,2">
+                        <TextBlock Grid.Column="1" Text="Culture"/>
+                        <TextBlock Grid.Column="2" Text="Language"/>
+                        <TextBlock Grid.Column="3" Text="This library"/>
+                        <TextBlock Grid.Column="4" Text="new RegionInfo(name)"/>
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding MismatchRows}"
+                                  ItemTemplate="{StaticResource CultureRowTemplate}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel Spacing="6">
+                    <TextBlock Classes="h2" Text="Cultures with no flag"/>
+                    <TextBlock Classes="caption" TextWrapping="Wrap"
+                               Text="Returning nothing is a real answer. The invariant culture names no country and is not reported as neutral, so an IsNeutralCulture check misses it. es-419 expands to a UN M.49 macro-region rather than a country. Others simply have no CLDR expansion. Every one of them is rejected before it can become a path to an asset that does not exist."/>
+
+                    <Grid Classes="columnHeader" ColumnDefinitions="80,104,*,96,208" Margin="0,10,0,2">
+                        <TextBlock Grid.Column="1" Text="Culture"/>
+                        <TextBlock Grid.Column="2" Text="Language"/>
+                        <TextBlock Grid.Column="3" Text="This library"/>
+                        <TextBlock Grid.Column="4" Text="new RegionInfo(name)"/>
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding NoFlagRows}"
+                                  ItemTemplate="{StaticResource CultureRowTemplate}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel Spacing="6">
+                    <TextBlock Classes="h2" Text="Cultures where both agree"/>
+                    <TextBlock Classes="caption" TextWrapping="Wrap"
+                               Text="Specific cultures carry their own country, so there is nothing to guess and both approaches land on the same flag."/>
+
+                    <Grid Classes="columnHeader" ColumnDefinitions="80,104,*,96,208" Margin="0,10,0,2">
+                        <TextBlock Grid.Column="1" Text="Culture"/>
+                        <TextBlock Grid.Column="2" Text="Language"/>
+                        <TextBlock Grid.Column="3" Text="This library"/>
+                        <TextBlock Grid.Column="4" Text="new RegionInfo(name)"/>
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding EverydayRows}"
+                                  ItemTemplate="{StaticResource CultureRowTemplate}"/>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+
+</UserControl>

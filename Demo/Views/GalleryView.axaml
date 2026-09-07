@@ -1,0 +1,96 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Demo.ViewModels"
+             x:Class="Demo.Views.GalleryView"
+             x:DataType="vm:GalleryViewModel">
+
+    <UserControl.Styles>
+        <!-- Declared here rather than in App.axaml so it wins over the shared Border.card setter. -->
+        <Style Selector="Border.tile:pointerover">
+            <Setter Property="Background" Value="{DynamicResource DemoTileHover}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel Margin="12">
+
+        <Border DockPanel.Dock="Top" Classes="card" Padding="14,12" Margin="0,0,0,12">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                <TextBlock Text="Filter" VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+                <!--
+                    Deliberately a label rather than a watermark: a placeholder inside the box would
+                    be lost against the filter text once the user starts typing.
+                -->
+                <TextBox Grid.Column="1"
+                         MinWidth="220"
+                         MaxWidth="380"
+                         HorizontalAlignment="Left"
+                         Text="{Binding SearchText}"/>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10"
+                            VerticalAlignment="Center" Margin="20,0,0,0">
+                    <TextBlock Text="Aspect ratio" VerticalAlignment="Center"/>
+                    <ToggleSwitch MinWidth="0"
+                                  OffContent="4x3"
+                                  OnContent="1x1"
+                                  IsChecked="{Binding IsSquare}"/>
+                </StackPanel>
+
+                <TextBlock Grid.Column="3" Classes="caption" VerticalAlignment="Center"
+                           Margin="20,0,0,0" Text="{Binding MatchSummary}"/>
+            </Grid>
+        </Border>
+
+        <!--
+            ItemsRepeater in a ScrollViewer, so only the visible tiles ever parse an SVG: the
+            binding below reads FlagEntry.Flag when a container is realised, and that property is
+            what calls into the library. Resolving all 271 eagerly would take long enough to read
+            as a fault in the library.
+        -->
+        <ScrollViewer>
+            <ItemsRepeater ItemsSource="{Binding Flags}" Margin="0,0,4,0">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout MinItemWidth="152"
+                                       MinItemHeight="122"
+                                       MinColumnSpacing="10"
+                                       MinRowSpacing="10"/>
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="vm:FlagEntry">
+                        <Border Classes="card tile" Padding="10,12">
+                            <StackPanel Spacing="8">
+                                <Border Classes="flagSlot"
+                                        HorizontalAlignment="Center"
+                                        Width="{Binding SlotWidth}"
+                                        Height="{Binding SlotHeight}">
+                                    <!--
+                                        The converters and FlagAssets return an SvgImage, which is
+                                        an IImage, so this is a plain Image.Source binding. Stretch
+                                        is stated rather than left to the default, because the slot
+                                        and the artwork have to keep agreeing on the fit.
+                                    -->
+                                    <Image Source="{Binding Flag}" Stretch="Uniform"/>
+                                </Border>
+                                <TextBlock Classes="mono"
+                                           HorizontalAlignment="Center"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Text="{Binding Code}"/>
+                                <TextBlock Classes="caption"
+                                           HorizontalAlignment="Center"
+                                           FontSize="11"
+                                           MaxWidth="128"
+                                           TextAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip.Tip="{Binding Name}"
+                                           Text="{Binding Name}"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </ScrollViewer>
+
+    </DockPanel>
+
+</UserControl>

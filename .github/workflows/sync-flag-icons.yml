@@ -1,0 +1,119 @@
+name: flag-icons
+
+# Refreshes the vendored flag assets and country table from upstream lipis/flag-icons (MIT)
+# and opens a pull request when anything changed. Nothing is ever pushed to master directly.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Sync flag-icons
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # Resolve the upstream commit first and then download the archive *for that commit*, so the
+      # SHA recorded in the pull request body is provably the one the files came from. Downloading
+      # the branch archive and asking for HEAD afterwards would race with any upstream push.
+      - name: Resolve upstream commit
+        id: upstream
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SHA=$(curl -fsSL \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            https://api.github.com/repos/lipis/flag-icons/commits/main | jq -r '.sha')
+          if [ -z "$SHA" ] || [ "$SHA" = "null" ]; then
+            echo "::error::Could not resolve the head commit of lipis/flag-icons."
+            exit 1
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Upstream head is $SHA"
+
+      - name: Download repository archive
+        run: wget -O archive.zip "https://github.com/lipis/flag-icons/archive/${{ steps.upstream.outputs.sha }}.zip"
+
+      - name: Unzip archive
+        run: unzip -q archive.zip -d temp
+
+      # Replace rather than merge: a flag deleted upstream has to disappear here too, or the
+      # generated table (which is built from country.json) will reference an asset that is no
+      # longer on disk and the generator's own asset check will fail.
+      - name: Replace vendored assets
+        run: |
+          UPSTREAM="temp/flag-icons-${{ steps.upstream.outputs.sha }}"
+          rm -rf Lipis.Flags.Avalonia/Assets/4x3 Lipis.Flags.Avalonia/Assets/1x1
+          mkdir -p Lipis.Flags.Avalonia/Assets
+          cp -R "$UPSTREAM/flags/4x3" Lipis.Flags.Avalonia/Assets/4x3
+          cp -R "$UPSTREAM/flags/1x1" Lipis.Flags.Avalonia/Assets/1x1
+          cp "$UPSTREAM/country.json" country.json
+
+      - name: Remove temporary files
+        run: |
+          rm -r ./temp
+          rm archive.zip
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      # The country table itself is build output and is not committed, so this step is here to
+      # validate rather than to produce: the generator fails when country.json lists a flag with
+      # no asset on disk, which catches a half-copied sync before the tests run.
+      - name: Validate the new country data
+        run: dotnet run --project tools/FlagGenerator
+
+      - name: git status
+        run: git status
+
+      # The repository's .gitattributes marks *.svg and country.json as -text, so no line-ending
+      # renormalisation happens on checkout or copy. Without it every one of the 542 SVGs would
+      # show as modified on every run and this check would never be able to say "nothing changed".
+      - name: Check for modified files
+        id: git-check
+        run: echo modified=$([ -z "`git status --porcelain`" ] && echo "false" || echo "true") >> $GITHUB_OUTPUT
+
+      # Note for maintainers: an upstream release that adds a flag needs no change here, but one
+      # that retires a flag falls below the floors in FlagAssetsTests (MinimumFlagCodeCount and
+      # MinimumCountryIdCount) and fails this step by design. Lower them to accept that sync.
+      - name: Test
+        if: ${{ steps.git-check.outputs.modified == 'true' }}
+        run: dotnet test Lipis.Flags.Avalonia.Test/Lipis.Flags.Avalonia.Test.csproj --configuration Release
+
+      # Only reached when the tests passed, so the branch this pushes is always green.
+      # Requires "Allow GitHub Actions to create and approve pull requests" in the repository's
+      # Actions settings.
+      - name: Create Pull Request
+        if: ${{ steps.git-check.outputs.modified == 'true' }}
+        uses: peter-evans/create-pull-request@v8
+        with:
+          branch: flag-icons
+          commit-message: "flag-icons assets changed."
+          title: "feat(flag-icons): assets changed."
+          body: |
+            Automated sync of the vendored flag assets from
+            [lipis/flag-icons](https://github.com/lipis/flag-icons) (MIT).
+
+            **Synced from upstream commit:** [`${{ steps.upstream.outputs.sha }}`](https://github.com/lipis/flag-icons/commit/${{ steps.upstream.outputs.sha }})
+
+            Updated in this pull request:
+
+            - `Lipis.Flags.Avalonia/Assets/4x3/` and `Lipis.Flags.Avalonia/Assets/1x1/`
+            - `country.json`
+
+            The country table is generated from `country.json` at build time, so it is not part
+            of this diff and cannot drift from the assets.
+
+            The test suite passed against these assets before this pull request was opened.

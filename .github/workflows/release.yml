@@ -1,0 +1,87 @@
+name: Release
+
+# Tag-driven only, deliberately: the package version is derived from the tag name, so a
+# workflow_dispatch run from a branch would pack a version called "master".
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  # The same gates a pull request goes through, including both AOT checks. A tag that cannot
+  # pass them never reaches the pack step.
+  test:
+    name: Test
+    uses: ./.github/workflows/call-test.yml
+
+  release:
+    name: Pack & Publish
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      # Fail before doing any work rather than at the push step, where an empty --api-key
+      # produces a 401 that reads like a bad key rather than a missing one.
+      - name: Verify the NuGet API key is configured
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::error::The NUGET_API_KEY secret is not set for this repository. Add it under Settings > Secrets and variables > Actions, then re-run this workflow."
+            exit 1
+          fi
+          echo "NUGET_API_KEY is present."
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          # NuGet rejects anything that is not a version, but it rejects it after the pack, so
+          # check here while the failure is still cheap and legible.
+          if ! printf '%s' "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$'; then
+            echo "::error::Tag '$GITHUB_REF_NAME' does not yield a usable package version (got '$VERSION'). Tag releases as vMAJOR.MINOR.PATCH, for example v12.0.1."
+            exit 1
+          fi
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+
+      # ContinuousIntegrationBuild normalises the source paths embedded in the PDB, which is what
+      # makes Source Link resolve for consumers debugging into the package.
+      # GeneratePackageOnBuild makes pack skip the build (NU5026 on a fresh checkout).
+      - name: Pack
+        run: >
+          dotnet pack Lipis.Flags.Avalonia/Lipis.Flags.Avalonia.csproj
+          --configuration Release
+          --output ./artifacts
+          -p:ContinuousIntegrationBuild=true
+          -p:GeneratePackageOnBuild=false
+          -p:Version=${{ steps.version.outputs.value }}
+
+      - name: Push to NuGet
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: >
+          dotnet nuget push "./artifacts/*.nupkg"
+          --source https://api.nuget.org/v3/index.json
+          --api-key "$NUGET_API_KEY"
+          --skip-duplicate
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: nupkg
+          path: ./artifacts/*.nupkg

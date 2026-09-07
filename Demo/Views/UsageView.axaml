@@ -1,0 +1,138 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:flags="clr-namespace:Lipis.Flags.Avalonia;assembly=Lipis.Flags.Avalonia"
+             xmlns:vm="clr-namespace:Demo.ViewModels"
+             x:Class="Demo.Views.UsageView"
+             x:DataType="vm:UsageViewModel">
+
+    <UserControl.Resources>
+        <flags:CountryIdToFlagImageSourceConverter x:Key="CountryToFlag"/>
+        <flags:CultureToFlagImageSourceConverter x:Key="CultureToFlag"/>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Border.code">
+            <Setter Property="Background" Value="{DynamicResource DemoCodeBackground}"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="14,12"/>
+        </Style>
+        <Style Selector="SelectableTextBlock.snippet">
+            <Setter Property="FontFamily" Value="Cascadia Mono,Consolas,DejaVu Sans Mono,Menlo,Courier New"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Foreground" Value="{DynamicResource DemoCodeForeground}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <StackPanel Margin="12" Spacing="12" MaxWidth="900" HorizontalAlignment="Left">
+
+            <Border Classes="notice">
+                <StackPanel Spacing="6">
+                    <TextBlock Classes="h2" Foreground="{DynamicResource DemoNoticeForeground}"
+                               Text="Bind to Image.Source"/>
+                    <TextBlock FontSize="13" TextWrapping="Wrap"
+                               Foreground="{DynamicResource DemoNoticeForeground}"
+                               Text="Both converters produce an SvgImage, which implements IImage, so the target is a plain Avalonia Image and its Source property. There is no path to bind: the artwork ships as one embedded archive rather than as ~540 individual resources, so no avares:// URI resolves to a flag and the SVG control has nothing to point its Path at. Nothing on this page uses that control."/>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="h2" Text="1. Declare the namespaces"/>
+                    <Border Classes="code">
+                        <SelectableTextBlock Classes="snippet" Text="{Binding NamespacesSnippet}"/>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="h2" Text="2. Render a flag from a country code"/>
+                    <Border Classes="code">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <SelectableTextBlock Classes="snippet" Text="{Binding CountrySnippet}"/>
+                        </ScrollViewer>
+                    </Border>
+
+                    <TextBlock Classes="caption" TextWrapping="Wrap" Margin="0,4,0,0"
+                               Text="Live, through that very converter. An unrecognised code converts to null, which leaves the slot empty rather than failing at render time."/>
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <TextBox x:Name="CodeBox" Text="de" Width="150" VerticalAlignment="Center"/>
+                        <Border Classes="flagSlot" Width="64" Height="48" VerticalAlignment="Center">
+                            <Panel>
+                                <Rectangle Margin="6" RadiusX="2" RadiusY="2"
+                                           StrokeThickness="1" StrokeDashArray="3,3"
+                                           Stroke="{DynamicResource DemoMutedForeground}"/>
+                                <Image Stretch="Uniform"
+                                       Source="{Binding #CodeBox.Text, Converter={StaticResource CountryToFlag}}"/>
+                            </Panel>
+                        </Border>
+                        <Border Classes="flagSlot" Width="48" Height="48" VerticalAlignment="Center">
+                            <Panel>
+                                <Rectangle Margin="6" RadiusX="2" RadiusY="2"
+                                           StrokeThickness="1" StrokeDashArray="3,3"
+                                           Stroke="{DynamicResource DemoMutedForeground}"/>
+                                <Image Stretch="Uniform"
+                                       Source="{Binding #CodeBox.Text, Converter={StaticResource CountryToFlag}, ConverterParameter=1x1}"/>
+                            </Panel>
+                        </Border>
+                        <TextBlock Classes="caption" VerticalAlignment="Center"
+                                   Text="4x3 and 1x1, same code, same converter."/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="h2" Text="3. Render a flag from a culture"/>
+                    <Border Classes="code">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <SelectableTextBlock Classes="snippet" Text="{Binding CultureSnippet}"/>
+                        </ScrollViewer>
+                    </Border>
+
+                    <TextBlock Classes="caption" TextWrapping="Wrap" Margin="0,4,0,0"
+                               Text="Try af, ar, sv, pt or es-419. A culture that resolves to no country leaves the slot empty."/>
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <TextBox x:Name="CultureBox" Text="af" Width="150" VerticalAlignment="Center"/>
+                        <Border Classes="flagSlot" Width="64" Height="48" VerticalAlignment="Center">
+                            <Panel>
+                                <Rectangle Margin="6" RadiusX="2" RadiusY="2"
+                                           StrokeThickness="1" StrokeDashArray="3,3"
+                                           Stroke="{DynamicResource DemoMutedForeground}"/>
+                                <Image Stretch="Uniform"
+                                       Source="{Binding #CultureBox.Text, Converter={StaticResource CultureToFlag}}"/>
+                            </Panel>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="h2" Text="4. From code"/>
+                    <Border Classes="code">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <SelectableTextBlock Classes="snippet" Text="{Binding CodeSnippet}"/>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="h2" Text="5. Pin the answers that matter"/>
+                    <TextBlock Classes="caption" TextWrapping="Wrap"
+                               Text="CLDR's opinions come from the host's ICU build and can change with it. Anything an application cares about belongs in Overrides."/>
+                    <Border Classes="code">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <SelectableTextBlock Classes="snippet" Text="{Binding OptionsSnippet}"/>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+
+</UserControl>

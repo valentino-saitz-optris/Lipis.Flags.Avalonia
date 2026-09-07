@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <!--
+        Explicit Version attributes rather than central package management: this repository has no
+        Directory.Packages.props, and introducing one here would silently change how the library
+        project resolves its own Avalonia reference.
+    -->
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.0"/>
+        <PackageReference Include="xunit" Version="2.9.3"/>
+        <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Lipis.Flags.Avalonia\Lipis.Flags.Avalonia.csproj"/>
+    </ItemGroup>
+
+</Project>

@@ -40,6 +40,8 @@
         worth reviewing. Inputs and Outputs make this a no-op on an up-to-date build; both target
         frameworks share the output path, so this runs in the outer build before they are
         dispatched: two inner builds invoking the generator at once collide over its own obj.
+        FlagGenerator is deliberately not in the solution, for the same reason: the solution would
+        build it in parallel with this, and the two builds fight over the same output.
     -->
     <PropertyGroup>
         <_CountryTable>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(BaseIntermediateOutputPath)', 'generated', 'CountryData.g.cs'))</_CountryTable>
